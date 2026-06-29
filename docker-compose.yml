@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: processpro-postgres
+    environment:
+      POSTGRES_DB: processpro
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: dev_only
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d processpro"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  spring-app:
+    build: ./backend
+    container_name: processpro-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/processpro
+      DB_USERNAME: admin
+      DB_PASSWORD: dev_only
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nginx:
+    build: ./nginx
+    container_name: processpro-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - spring-app
+
+volumes:
+  postgres_data:
