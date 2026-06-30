@@ -1,44 +1,98 @@
-# Debug & Integration Audit Report — ProcessPro
+# Debug Report
 
-This report compiles the debugging steps, resolved defects, files modified, and verification results carried out during the final audit phase to stabilize ProcessPro for E2E production staging.
-
----
-
-## 1. Resolved Defects & Fixes
-
-### Bug 1: Hardcoded API BaseURL Origin Mismatch
-- **Root Cause**: The Axios HTTP client `apiClient.ts` and the SSE fetch stream inside `Workspace.tsx` hardcoded the backend url to `http://localhost:8080`. When deploying inside Docker or staging environments (hosted on different ports/origins or proxied through Nginx at `http://localhost`), these API calls would fail with connection timeout/refused state.
-- **Fix Applied**: Implemented a dynamic resolver function checking `window.location.port`. If running the Vite development server (port `5173`), it connects to `http://localhost:8080`. In production, it dynamically resolves the backend location relative to `window.location.origin` (routing through Nginx proxy).
-- **Files Modified**:
-  - [apiClient.ts](file:///d:/New%20folder%20(4)/processpro/frontend/src/services/apiClient.ts)
-  - [Workspace.tsx](file:///d:/New%20folder%20(4)/processpro/frontend/src/pages/Workspace.tsx)
-
-### Bug 2: Null Pointer Exception on Custom Node EntityClasses
-- **Root Cause**: Nodes generated dynamically or custom-added without a strict `entityClass` parameter caused the toggle button handler `toggleNodeState` to crash when calling `.includes(...)` on undefined variables, blocking diagram editing capabilities.
-- **Fix Applied**: Guarded the state check inside `diagramStore.ts` using `const entityClass = nodes[id].entityClass || ''` fallback.
-- **Files Modified**:
-  - [diagramStore.ts](file:///d:/New%20folder%20(4)/processpro/frontend/src/stores/diagramStore.ts)
-
-### Bug 3: Dark Mode FOUC (Flash of Unstyled Content)
-- **Root Cause**: The Zustand `uiStore` initialized the UI theme state read from `localStorage` but failed to apply the matching Tailwind `.dark` class list to `document.documentElement` during the initial script execution load. This resulted in a light-theme flash on every hard refresh.
-- **Fix Applied**: Added a top-level inline initialization block immediately checking and applying the saved theme class list prior to React mounting.
-- **Files Modified**:
-  - [uiStore.ts](file:///d:/New%20folder%20(4)/processpro/frontend/src/stores/uiStore.ts)
-
-### Bug 4: Mocked / Placeholder SVG Export
-- **Root Cause**: Clicking "Export SVG" displayed a feedback toast but had no actual file creation or download capability.
-- **Fix Applied**: Built a fully functional dynamic SVG compiler looping over active workspace `nodes` and `edges`, mapping their coordinates, tags, connections, and colors, and downloading them cleanly as a valid `.svg` file.
-- **Files Modified**:
-  - [Workspace.tsx](file:///d:/New%20folder%20(4)/processpro/frontend/src/pages/Workspace.tsx)
+This report documents the bugs resolved during the project stabilization phase.
 
 ---
 
-## 2. Final Verification Results
+## 1. Timeline Version Restoration Gap
+*   **Bug Found**: The frontend version history UI (timeline) attempts to switch historical graph snapshots using the endpoint:
+    `POST /api/v1/diagrams/{id}/history/restore?version={version}`
+    However, the endpoint was missing on the backend controller, resulting in `404 Not Found` errors.
+*   **Root Cause**: Lack of corresponding REST mapping implementation on the backend controller to update project-to-diagram version references.
+*   **Files Modified**:
+    - [DiagramController.java](file:///d:/New%20folder%20(4)/processpro/backend/src/main/java/com/processmap/history/controller/DiagramController.java)
+    - [DiagramHistoryService.java](file:///d:/New%20folder%20(4)/processpro/backend/src/main/java/com/processmap/history/service/DiagramHistoryService.java)
+*   **Exact Code Changes**:
+    Exposed POST endpoint in `DiagramController`:
+    ```java
+    @PostMapping("/{id}/history/restore")
+    public ApiResponse<DiagramResponseDTO> restoreVersion(
+            @PathVariable UUID id,
+            @RequestParam int version,
+            @AuthenticationPrincipal UUID userId) {
+        return ApiResponse.of(diagramHistoryService.restoreVersion(id, version, userId));
+    }
+    ```
+    Implemented version swap toggling on `DiagramHistoryService.restoreVersion` setting the targeted version's `isCurrent` property to `true` and others to `false`.
+*   **Verification**: All surefire tests passed. Timeline restoration works end-to-end.
 
-| Target Check | Result |
-| :--- | :--- |
-| **Backend Test Suite (`mvn clean test`)** | ✅ **SUCCESS** (25/25 tests passed) |
-| **Vite Production Bundles (`npm run build`)** | ✅ **SUCCESS** (bundled assets in 4.12s) |
-| **TypeScript Typecheck (`npm run typecheck`)** | ✅ **SUCCESS** (0 compile warnings or errors) |
-| **E2E JWT Auth & Token Rotation** | ✅ **VERIFIED** |
-| **Interactive Layout Coordinate Saves** | ✅ **VERIFIED** |
+---
+
+## 2. Dynamic Port Mapping Failures
+*   **Bug Found**: If Vite ran on a dynamic port (e.g. 5174) due to 5173 being in use, the frontend failed to connect to the backend because of a hardcoded port check.
+*   **Root Cause**: Hardcoded check `window.location.port === '5173'` resolved the target base URL incorrect.
+*   **Files Modified**:
+    - [apiClient.ts](file:///d:/New%20folder%20(4)/processpro/frontend/src/services/apiClient.ts)
+    - [Workspace.tsx](file:///d:/New%20folder%20(4)/processpro/frontend/src/pages/Workspace.tsx)
+*   **Exact Code Changes**:
+    ```typescript
+    const getBaseUrl = () => {
+      if (typeof window !== 'undefined') {
+        return window.location.hostname === 'localhost' && window.location.port !== '8080'
+          ? 'http://localhost:8080'
+          : window.location.origin;
+      }
+      return 'http://localhost:8080';
+    };
+    ```
+*   **Verification**: Verified successful routing on arbitrary localhost ports.
+
+---
+
+## 3. SSE Generation Stream Lifecycle Errors
+*   **Bug Found**: Client socket connections were sometimes closed prematurely or resource leakage happened during background generation.
+*   **Root Cause**: `SseEmitter` was initialized without timeout or error listener callbacks.
+*   **File Modified**: [GenerationController.java](file:///d:/New%20folder%20(4)/processpro/backend/src/main/java/com/processmap/ai/controller/GenerationController.java)
+*   **Exact Code Changes**:
+    ```java
+    emitter.onCompletion(() -> log.debug("Emitter completed for user {}", userId));
+    emitter.onTimeout(() -> {
+        log.warn("Emitter timed out for user {}", userId);
+        emitter.complete();
+    });
+    emitter.onError((ex) -> {
+        log.error("Emitter error for user {}", userId, ex);
+        emitter.complete();
+    });
+    ```
+*   **Verification**: Emitters release correctly on connection drops.
+
+---
+
+## 4. History API Contract Sync
+*   **Bug Found**: The history retrieval called `/api/v1/diagrams/${id}/history`, resulting in `404 Not Found`.
+*   **Root Cause**: The backend listing endpoint expects project UUID on path `/api/v1/diagrams/project/{projectId}`.
+*   **File Modified**: [diagramService.ts](file:///d:/New%20folder%20(4)/processpro/frontend/src/services/diagramService.ts)
+*   **Exact Code Changes**:
+    ```diff
+    -  getHistory: async (id: string) => {
+    -    const response = await apiClient.get<any>(`/api/v1/diagrams/${id}/history`);
+    +  getHistory: async (projectId: string) => {
+    +    const response = await apiClient.get<any>(`/api/v1/diagrams/project/${projectId}`);
+    ```
+*   **Verification**: Clean synchronization, diagram timelines fetch successfully.
+
+---
+
+## 5. Security Access Denied Context Leakage
+*   **Bug Found**: 403 Forbidden events leaked Java exception details.
+*   **Root Cause**: Access denied events were not handled explicitly inside Security Filter chains.
+*   **File Modified**: [SecurityConfig.java](file:///d:/New%20folder%20(4)/processpro/backend/src/main/java/com/processmap/config/SecurityConfig.java)
+*   **Exact Code Changes**:
+    Wired custom `AccessDeniedHandler` payload writer.
+*   **Verification**: Custom clean error response returned on access violations.
+
+---
+
+## 6. Remaining Risks
+*   **None**: Zero compile errors or warnings; all unit and integration tests passed.
