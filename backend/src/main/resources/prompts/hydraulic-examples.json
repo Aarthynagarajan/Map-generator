@@ -1,0 +1,70 @@
+[
+  {
+    "input": "Fluid flows from hydraulic reservoir, pressurized by hydraulic pump HP-1 to directional valve DCV-1, which extends cylinder CYL-1.",
+    "output": {
+      "nodes": [
+        {
+          "id": "n1",
+          "label": "Hydraulic Reservoir",
+          "entityClass": "RESERVOIR_HYDRAULIC",
+          "confidence": 0.95,
+          "aliases": ["reservoir"],
+          "medium": "hydraulic",
+          "userConfirmRequired": false
+        },
+        {
+          "id": "n2",
+          "label": "HP-1",
+          "entityClass": "HYDRAULIC_PUMP",
+          "confidence": 0.98,
+          "aliases": ["hydraulic pump"],
+          "medium": "hydraulic",
+          "userConfirmRequired": false
+        },
+        {
+          "id": "n3",
+          "label": "DCV-1",
+          "entityClass": "DIRECTIONAL_CONTROL_VALVE",
+          "confidence": 0.97,
+          "aliases": ["directional valve"],
+          "medium": "hydraulic",
+          "userConfirmRequired": false
+        },
+        {
+          "id": "n4",
+          "label": "CYL-1",
+          "entityClass": "CYLINDER",
+          "confidence": 0.96,
+          "aliases": ["cylinder"],
+          "medium": "hydraulic",
+          "userConfirmRequired": false
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "from": "n1",
+          "to": "n2",
+          "medium": "hydraulic",
+          "direction": "forward"
+        },
+        {
+          "id": "e2",
+          "from": "n2",
+          "to": "n3",
+          "medium": "hydraulic",
+          "direction": "forward"
+        },
+        {
+          "id": "e3",
+          "from": "n3",
+          "to": "n4",
+          "medium": "hydraulic",
+          "direction": "forward"
+        }
+      ],
+      "branches": [],
+      "domain": "hydraulic"
+    }
+  }
+]

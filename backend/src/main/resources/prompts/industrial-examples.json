@@ -1,0 +1,105 @@
+[
+  {
+    "input": "Water enters from reservoir, pumped by P-101 (centrifugal pump) through check valve CV-101 to holding tank T-102. Gate valve GV-103 controls flow to the process unit.",
+    "output": {
+      "nodes": [
+        {
+          "id": "n1",
+          "label": "Reservoir",
+          "entityClass": "RESERVOIR",
+          "confidence": 0.95,
+          "aliases": ["reservoir"],
+          "medium": "liquid",
+          "userConfirmRequired": false
+        },
+        {
+          "id": "n2",
+          "label": "P-101",
+          "entityClass": "CENTRIFUGAL_PUMP",
+          "confidence": 0.98,
+          "aliases": ["centrifugal pump"],
+          "medium": "liquid",
+          "userConfirmRequired": false
+        },
+        {
+          "id": "n3",
+          "label": "CV-101",
+          "entityClass": "CHECK_VALVE",
+          "confidence": 0.97,
+          "aliases": ["check valve"],
+          "medium": "liquid",
+          "userConfirmRequired": false
+        },
+        {
+          "id": "n4",
+          "label": "T-102",
+          "entityClass": "STORAGE_TANK",
+          "confidence": 0.96,
+          "aliases": ["holding tank"],
+          "medium": "liquid",
+          "userConfirmRequired": false
+        },
+        {
+          "id": "n5",
+          "label": "GV-103",
+          "entityClass": "GATE_VALVE",
+          "confidence": 0.97,
+          "aliases": ["gate valve"],
+          "medium": "liquid",
+          "userConfirmRequired": false
+        },
+        {
+          "id": "n6",
+          "label": "ProcessUnit",
+          "entityClass": "PROCESS_UNIT",
+          "confidence": 0.80,
+          "aliases": ["process unit"],
+          "medium": "liquid",
+          "userConfirmRequired": false
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "from": "n1",
+          "to": "n2",
+          "medium": "liquid",
+          "direction": "forward",
+          "label": "suction"
+        },
+        {
+          "id": "e2",
+          "from": "n2",
+          "to": "n3",
+          "medium": "liquid",
+          "direction": "forward",
+          "label": "discharge"
+        },
+        {
+          "id": "e3",
+          "from": "n3",
+          "to": "n4",
+          "medium": "liquid",
+          "direction": "forward"
+        },
+        {
+          "id": "e4",
+          "from": "n4",
+          "to": "n5",
+          "medium": "liquid",
+          "direction": "forward"
+        },
+        {
+          "id": "e5",
+          "from": "n5",
+          "to": "n6",
+          "medium": "liquid",
+          "direction": "forward",
+          "label": "process feed"
+        }
+      ],
+      "branches": [],
+      "domain": "industrial"
+    }
+  }
+]

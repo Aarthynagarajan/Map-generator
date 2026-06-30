@@ -22,4 +22,5 @@ public class TypedEdge {
     private String label;
     private String branchCondition;
     private String animationClass;
+    private PointDTO labelPosition;
 }

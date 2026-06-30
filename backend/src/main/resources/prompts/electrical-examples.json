@@ -1,0 +1,71 @@
+[
+  {
+    "input": "Power from generator feeds the step-down transformer T-1. Transformer feeds the main switchboard SW-1 through circuit breaker CB-1.",
+    "output": {
+      "nodes": [
+        {
+          "id": "n1",
+          "label": "Generator",
+          "entityClass": "GENERATOR",
+          "confidence": 0.95,
+          "aliases": ["generator"],
+          "medium": "electrical",
+          "userConfirmRequired": false
+        },
+        {
+          "id": "n2",
+          "label": "T-1",
+          "entityClass": "TRANSFORMER",
+          "confidence": 0.98,
+          "aliases": ["step-down transformer"],
+          "medium": "electrical",
+          "userConfirmRequired": false
+        },
+        {
+          "id": "n3",
+          "label": "CB-1",
+          "entityClass": "CIRCUIT_BREAKER",
+          "confidence": 0.97,
+          "aliases": ["circuit breaker"],
+          "medium": "electrical",
+          "userConfirmRequired": false
+        },
+        {
+          "id": "n4",
+          "label": "SW-1",
+          "entityClass": "PANEL_BOARD",
+          "confidence": 0.96,
+          "aliases": ["main switchboard"],
+          "medium": "electrical",
+          "userConfirmRequired": false
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "from": "n1",
+          "to": "n2",
+          "medium": "electrical",
+          "direction": "forward",
+          "label": "feeder"
+        },
+        {
+          "id": "e2",
+          "from": "n2",
+          "to": "n3",
+          "medium": "electrical",
+          "direction": "forward"
+        },
+        {
+          "id": "e3",
+          "from": "n3",
+          "to": "n4",
+          "medium": "electrical",
+          "direction": "forward"
+        }
+      ],
+      "branches": [],
+      "domain": "electrical"
+    }
+  }
+]
