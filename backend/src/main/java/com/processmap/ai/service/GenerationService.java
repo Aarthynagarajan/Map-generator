@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.springframework.security.core.context.SecurityContextHolder;
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
@@ -20,7 +19,7 @@ public class GenerationService {
     private final AIOrchestratorService aiOrchestratorService;
 
     @Async("generationTaskExecutor")
-    public void generateAsync(GenerationRequestDTO request, UUID userId, SseEmitter emitter) {
+    public void generateAsync(GenerationRequestDTO request, UUID userId, SafeSseEmitter emitter) {
         log.info("Starting async generation task for user: {}", userId);
         try {
             // Execute full pipeline and persistence passing progress callback
@@ -28,32 +27,36 @@ public class GenerationService {
                 sendProgress(emitter, stage, pct);
             });
 
-            // Send completion event
-            SseEmitter.SseEventBuilder completeEvent = SseEmitter.event()
-                    .name("complete")
-                    .data(Map.of("diagramId", response.id().toString(), "payload", response));
-            emitter.send(completeEvent);
-            emitter.complete();
-            log.info("Async generation task completed successfully for diagram ID: {}", response.id());
+            // Send completion event if not already closed
+            if (!emitter.isClosed()) {
+                SseEmitter.SseEventBuilder completeEvent = SseEmitter.event()
+                        .name("complete")
+                        .data(Map.of("diagramId", response.id().toString(), "payload", response));
+                emitter.send(completeEvent);
+                emitter.complete();
+                log.info("Async generation task completed successfully for diagram ID: {}", response.id());
+            }
 
         } catch (Exception ex) {
             log.error("Async generation task failed", ex);
-            try {
-                SseEmitter.SseEventBuilder errorEvent = SseEmitter.event()
-                        .name("error")
-                        .data(Map.of("code", "GENERATION_FAILED", "message", ex.getMessage()));
-                emitter.send(errorEvent);
-                emitter.completeWithError(ex);
-            } catch (Exception ioException) {
-                log.warn("Could not write error event to client (likely client disconnected): {}", ioException.getMessage());
+            if (!emitter.isClosed()) {
                 try {
-                    emitter.complete();
-                } catch (Exception ignored) {}
+                    SseEmitter.SseEventBuilder errorEvent = SseEmitter.event()
+                            .name("error")
+                            .data(Map.of("code", "GENERATION_FAILED", "message", ex.getMessage()));
+                    emitter.send(errorEvent);
+                } catch (Exception ioException) {
+                    log.warn("Could not write error event to client: {}", ioException.getMessage());
+                }
+                emitter.completeWithError(ex);
             }
         }
     }
 
-    private void sendProgress(SseEmitter emitter, String stage, int pct) {
+    private void sendProgress(SafeSseEmitter emitter, String stage, int pct) {
+        if (emitter.isClosed()) {
+            throw new RuntimeException("Client disconnected or emitter closed");
+        }
         try {
             SseEmitter.SseEventBuilder event = SseEmitter.event()
                     .name("progress")
@@ -61,6 +64,7 @@ public class GenerationService {
             emitter.send(event);
         } catch (IOException e) {
             log.warn("Failed to send progress event for stage {}: {}. Aborting task.", stage, e.getMessage());
+            emitter.markClosed();
             throw new RuntimeException("Client disconnected: " + e.getMessage(), e);
         }
     }

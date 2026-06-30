@@ -2,6 +2,7 @@ package com.processmap.ai.controller;
 
 import com.processmap.dto.GenerationRequestDTO;
 import com.processmap.ai.service.GenerationService;
+import com.processmap.ai.service.SafeSseEmitter;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
@@ -30,16 +31,21 @@ public class GenerationController {
             @RequestBody GenerationRequestDTO request,
             @AuthenticationPrincipal UUID userId) {
         
-        SseEmitter emitter = new SseEmitter(45000L);
+        // 5-minute timeout matching spring.mvc.async.request-timeout
+        SseEmitter emitter = new SseEmitter(300000L);
+        SafeSseEmitter safeEmitter = new SafeSseEmitter(emitter);
 
-        emitter.onCompletion(() -> log.debug("Emitter completed for user {}", userId));
+        emitter.onCompletion(() -> {
+            log.debug("Emitter completed for user {}", userId);
+            safeEmitter.markClosed();
+        });
         emitter.onTimeout(() -> {
             log.warn("Emitter timed out for user {}", userId);
-            emitter.complete();
+            safeEmitter.complete();
         });
         emitter.onError((ex) -> {
             log.error("Emitter error for user {}", userId, ex);
-            emitter.complete();
+            safeEmitter.complete();
         });
 
         // Manual validation to prevent validation exceptions escaping to GlobalExceptionHandler
@@ -50,8 +56,8 @@ public class GenerationController {
                 SseEmitter.SseEventBuilder errorEvent = SseEmitter.event()
                         .name("error")
                         .data(Map.of("code", "VALIDATION_FAILED", "message", message));
-                emitter.send(errorEvent);
-                emitter.complete();
+                safeEmitter.send(errorEvent);
+                safeEmitter.complete();
             } catch (Exception e) {
                 log.error("Failed to send validation error to emitter", e);
             }
@@ -60,15 +66,15 @@ public class GenerationController {
 
         try {
             log.info("Authenticated user = {}", userId);
-            generationService.generateAsync(request, userId, emitter);
+            generationService.generateAsync(request, userId, safeEmitter);
         } catch (Exception ex) {
             log.error("Failed to start generation async task for user {}", userId, ex);
             try {
                 SseEmitter.SseEventBuilder errorEvent = SseEmitter.event()
                         .name("error")
                         .data(Map.of("code", "GENERATION_FAILED", "message", ex.getMessage()));
-                emitter.send(errorEvent);
-                emitter.complete();
+                safeEmitter.send(errorEvent);
+                safeEmitter.complete();
             } catch (Exception e) {
                 log.error("Failed to send error event to emitter", e);
             }

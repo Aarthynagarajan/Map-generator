@@ -29,6 +29,9 @@ spring:
           options:
             model: gemini-2.5-flash
             temperature: 0.1
+  mvc:
+    async:
+      request-timeout: 300000
 
 app:
   jwt:
