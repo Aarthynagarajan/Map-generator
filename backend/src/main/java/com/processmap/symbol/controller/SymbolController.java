@@ -24,10 +24,8 @@ public class SymbolController {
 
     @GetMapping
     public ApiResponse<List<SymbolResponseDTO>> getSymbols(@RequestParam String domain) {
-        Domain dom;
-        try {
-            dom = Domain.valueOf(domain.toUpperCase());
-        } catch (IllegalArgumentException e) {
+        Domain dom = Domain.fromString(domain);
+        if (dom == null) {
             dom = Domain.INDUSTRIAL; // fallback
         }
 

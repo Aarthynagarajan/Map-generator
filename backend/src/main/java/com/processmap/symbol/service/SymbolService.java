@@ -28,10 +28,8 @@ public class SymbolService {
     public SymbolGraph mapSymbols(EntityGraph entityGraph) {
         log.info("Mapping symbols for domain: {}", entityGraph.domain());
 
-        Domain domain;
-        try {
-            domain = Domain.valueOf(entityGraph.domain().toUpperCase());
-        } catch (IllegalArgumentException e) {
+        Domain domain = Domain.fromString(entityGraph.domain());
+        if (domain == null) {
             domain = Domain.INDUSTRIAL; // default
         }
 

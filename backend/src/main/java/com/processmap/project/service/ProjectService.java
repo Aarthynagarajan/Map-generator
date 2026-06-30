@@ -32,10 +32,8 @@ public class ProjectService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "User not found", HttpStatus.NOT_FOUND));
 
-        Domain domain;
-        try {
-            domain = Domain.valueOf(request.domain().toUpperCase());
-        } catch (IllegalArgumentException e) {
+        Domain domain = Domain.fromString(request.domain());
+        if (domain == null) {
             throw new AppException(ErrorCode.VALIDATION_FAILED, "Invalid domain value", HttpStatus.BAD_REQUEST);
         }
 
@@ -72,10 +70,8 @@ public class ProjectService {
 
         validateOwnership(project, userId);
 
-        Domain domain;
-        try {
-            domain = Domain.valueOf(request.domain().toUpperCase());
-        } catch (IllegalArgumentException e) {
+        Domain domain = Domain.fromString(request.domain());
+        if (domain == null) {
             throw new AppException(ErrorCode.VALIDATION_FAILED, "Invalid domain value", HttpStatus.BAD_REQUEST);
         }
 

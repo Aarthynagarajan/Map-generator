@@ -24,7 +24,6 @@ public class Synonym {
     @Column(name = "entity_class", nullable = false, length = 100)
     private String entityClass;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Domain domain;
 }
