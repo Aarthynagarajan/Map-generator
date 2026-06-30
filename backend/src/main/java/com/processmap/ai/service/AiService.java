@@ -18,6 +18,7 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -34,8 +35,17 @@ public class AiService {
         backoff = @Backoff(delay = 2000, multiplier = 2.0)
     )
     public EntityGraph extractEntities(String userPrompt, String domain) {
-        log.info("Invoking LLM for entity extraction in domain: {}", domain);
-        long startTime = System.currentTimeMillis();
+        return extractEntities(userPrompt, domain, null, null);
+    }
+
+    @Retryable(
+        retryFor = { Exception.class },
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 2000, multiplier = 2.0)
+    )
+    public EntityGraph extractEntities(String userPrompt, String domain, UUID userId, UUID projectId) {
+        long startTimestamp = System.currentTimeMillis();
+        log.info("Invoking LLM for entity extraction | User ID: {} | Project ID: {} | Domain: {}", userId, projectId, domain);
 
         String systemPrompt = promptBuilderService.buildSystemPrompt(domain);
         int promptLength = systemPrompt.length() + userPrompt.length();
@@ -55,27 +65,36 @@ public class AiService {
         try {
             response = chatModel.call(prompt);
         } catch (Exception e) {
-            long latencyMs = System.currentTimeMillis() - startTime;
-            log.error("LLM call failed | Provider: Google Gemini | Latency: {}ms | Prompt Length: {} | Error: {}",
-                    latencyMs, promptLength, e.getMessage(), e);
+            long endTimestamp = System.currentTimeMillis();
+            long latencyMs = endTimestamp - startTimestamp;
+            log.error("LLM call failed | User ID: {} | Project ID: {} | Domain: {} | Latency: {}ms | Start: {} | End: {} | Error: {}",
+                    userId, projectId, domain, latencyMs, startTimestamp, endTimestamp, e.getMessage(), e);
             throw new AppException(ErrorCode.LLM_TIMEOUT, "LLM call timed out or failed: " + e.getMessage(), HttpStatus.GATEWAY_TIMEOUT);
         }
 
-        long latencyMs = System.currentTimeMillis() - startTime;
+        long endTimestamp = System.currentTimeMillis();
+        long latencyMs = endTimestamp - startTimestamp;
         String rawContent = response.getResult().getOutput().getText();
         String cleanedContent = cleanJsonContent(rawContent);
+
+        if (log.isDebugEnabled()) {
+            log.debug("Raw Gemini response received: {}", rawContent);
+        }
 
         String modelUsed = response.getMetadata() != null ? response.getMetadata().getModel() : "unknown";
         int responseLength = cleanedContent != null ? cleanedContent.length() : 0;
 
-        log.info("LLM call successful | Provider: Google Gemini | Latency: {}ms | Model: {} | Prompt Length: {} | Response Length: {}",
-                latencyMs, modelUsed, promptLength, responseLength);
+        log.info("LLM call successful | User ID: {} | Project ID: {} | Domain: {} | Model: {} | Latency: {}ms | Start: {} | End: {} | Prompt Length: {} | Response Length: {}",
+                userId, projectId, domain, modelUsed, latencyMs, startTimestamp, endTimestamp, promptLength, responseLength);
 
         try {
             EntityGraph entityGraph = objectMapper.readValue(cleanedContent, EntityGraph.class);
             return entityGraph;
         } catch (Exception e) {
-            log.error("Failed to parse LLM structured response to EntityGraph. Cleaned Content: {}", cleanedContent, e);
+            log.error("Failed to parse LLM structured response to EntityGraph | User ID: {} | Project ID: {}", userId, projectId, e);
+            if (log.isDebugEnabled()) {
+                log.debug("Malformed JSON content: {}", cleanedContent);
+            }
             throw new AppException(ErrorCode.VALIDATION_FAILED, "Failed to parse structured JSON from LLM: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }

@@ -52,7 +52,7 @@ public class AIOrchestratorService {
 
         // 1. LLM extraction
         if (progressCallback != null) progressCallback.accept("parsing", 20);
-        EntityGraph entityGraph = aiService.extractEntities(request.prompt(), request.domain());
+        EntityGraph entityGraph = aiService.extractEntities(request.prompt(), request.domain(), userId, request.projectId());
 
         // 2. Symbol mapping
         if (progressCallback != null) progressCallback.accept("symbol_mapping", 50);
