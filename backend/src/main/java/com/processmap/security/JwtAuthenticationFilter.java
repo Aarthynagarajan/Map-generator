@@ -26,41 +26,87 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        try {
-            String token = parseBearerToken(request);
-            if (token != null && jwtTokenProvider.validateToken(token)) {
-                UUID userId = jwtTokenProvider.extractUserId(token);
-                String role = jwtTokenProvider.extractRole(token);
-
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userId,
-                        null,
-                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
-                );
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
-        } catch (Exception ex) {
-            log.error("Could not set user authentication in security context", ex);
-        }
-
-        filterChain.doFilter(request, response);
-    }
-
+    /**
+     * Execute the filter for async dispatches (required for SSE).
+     */
     @Override
     protected boolean shouldNotFilterAsyncDispatch() {
         return false;
     }
 
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
+            throws ServletException, IOException {
+
+        log.info(
+                "JWT FILTER | Dispatcher={} | URI={}",
+                request.getDispatcherType(),
+                request.getRequestURI()
+        );
+
+        try {
+
+            String token = parseBearerToken(request);
+
+            if (token != null && jwtTokenProvider.validateToken(token)) {
+
+                UUID userId = jwtTokenProvider.extractUserId(token);
+                String role = jwtTokenProvider.extractRole(token);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userId,
+                                null,
+                                Collections.singletonList(
+                                        new SimpleGrantedAuthority("ROLE_" + role)
+                                )
+                        );
+
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                log.info(
+                        "Authenticated user {} during {} dispatch",
+                        userId,
+                        request.getDispatcherType()
+                );
+
+            } else {
+
+                log.warn(
+                        "No valid JWT token found for {} {}",
+                        request.getMethod(),
+                        request.getRequestURI()
+                );
+            }
+
+        } catch (Exception ex) {
+
+            SecurityContextHolder.clearContext();
+
+            log.error("JWT authentication failed", ex);
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
     private String parseBearerToken(HttpServletRequest request) {
+
         String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+
+        if (StringUtils.hasText(bearerToken)
+                && bearerToken.startsWith("Bearer ")) {
+
             return bearerToken.substring(7);
         }
+
         return null;
     }
 }

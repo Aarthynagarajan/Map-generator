@@ -1,5 +1,6 @@
 package com.processmap.dto;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -15,5 +16,7 @@ public record DiagramResponseDTO(
     String thumbnailUrl,
     boolean isCurrent,
     OffsetDateTime createdAt,
-    GenerationMetadataDTO generationMetadata
+    GenerationMetadataDTO generationMetadata,
+    JsonNode graphSnapshot
 ) {}
+
