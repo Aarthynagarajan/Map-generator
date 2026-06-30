@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useUiStore } from '../stores/uiStore';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2, User } from 'lucide-react';
 
 export const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,6 +19,16 @@ export const Register = () => {
     e.preventDefault();
     setError(null);
 
+    if (!displayName.trim()) {
+      setError('Display name is required');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -25,7 +36,7 @@ export const Register = () => {
 
     setLoading(true);
     try {
-      await authService.register({ email, password });
+      await authService.register({ email, password, displayName });
       showToast('Registration successful! Please login.', 'success');
       navigate('/login');
     } catch (err: any) {
@@ -56,10 +67,27 @@ export const Register = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs font-bold uppercase tracking-wider block mb-1 opacity-70">
+              Display Name
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-2.5 opacity-40 text-slate-900 dark:text-slate-100" size={18} />
+              <input
+                type="text"
+                required
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="John Doe"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-brand-500 text-slate-900 dark:text-slate-100"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider block mb-1 opacity-70">
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-2.5 opacity-40" size={18} />
+              <Mail className="absolute left-3 top-2.5 opacity-40 text-slate-900 dark:text-slate-100" size={18} />
               <input
                 type="email"
                 required
@@ -76,7 +104,7 @@ export const Register = () => {
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-2.5 opacity-40" size={18} />
+              <Lock className="absolute left-3 top-2.5 opacity-40 text-slate-900 dark:text-slate-100" size={18} />
               <input
                 type="password"
                 required
@@ -93,7 +121,7 @@ export const Register = () => {
               Confirm Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-2.5 opacity-40" size={18} />
+              <Lock className="absolute left-3 top-2.5 opacity-40 text-slate-900 dark:text-slate-100" size={18} />
               <input
                 type="password"
                 required
