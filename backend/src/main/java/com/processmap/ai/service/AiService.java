@@ -11,7 +11,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.google.genai.GoogleGenAiChatOptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -43,13 +43,11 @@ public class AiService {
         SystemMessage systemMessage = new SystemMessage(systemPrompt);
         UserMessage userMessage = new UserMessage(userPrompt);
 
-        // Enforce JSON format using OpenAiChatOptions and OpenAiApi
-        OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .withModel("gpt-4o")
-                .withTemperature(0.1)
-                .withResponseFormat(org.springframework.ai.openai.api.ResponseFormat.builder()
-                        .type(org.springframework.ai.openai.api.ResponseFormat.Type.JSON_OBJECT)
-                        .build())
+        // Enforce JSON format using GoogleGenAiChatOptions
+        GoogleGenAiChatOptions options = GoogleGenAiChatOptions.builder()
+                .model("gemini-1.5-flash")
+                .temperature(0.1)
+                .responseMimeType("application/json")
                 .build();
 
         Prompt prompt = new Prompt(List.of(systemMessage, userMessage), options);
@@ -63,7 +61,7 @@ public class AiService {
         }
 
         long latencyMs = System.currentTimeMillis() - startTime;
-        String content = response.getResult().getOutput().getContent();
+        String content = response.getResult().getOutput().getText();
 
         log.info("LLM call completed in {}ms", latencyMs);
 

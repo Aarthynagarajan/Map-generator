@@ -9,5 +9,6 @@ spring:
   flyway:
     enabled: true
   ai:
-    openai:
-      api-key: mock-test-key
+    google:
+      genai:
+        api-key: mock-test-key

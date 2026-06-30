@@ -5,11 +5,12 @@ spring:
       hibernate:
         format_sql: true
   ai:
-    openai:
-      chat:
-        options:
-          model: gpt-4o
-          temperature: 0.1
+    google:
+      genai:
+        chat:
+          options:
+            model: gemini-1.5-flash
+            temperature: 0.1
 
 logging:
   level:

@@ -25,7 +25,7 @@ Copy the env file and set your key values:
 ```bash
 cp .env.example .env
 ```
-Ensure you provide a valid `OPENAI_API_KEY` for AI features to execute.
+Ensure you provide a valid `GEMINI_API_KEY` for AI features to execute.
 
 Run Flyway migrations and start the backend:
 ```bash
