@@ -38,6 +38,10 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       set({ currentDiagram: null, nodes: {}, edges: {}, undoStack: [], redoStack: [], isDirty: false });
       return;
     }
+    if (!diagram.graphSnapshot) {
+      console.error("Invalid diagram payload", diagram);
+      return;
+    }
     set({
       currentDiagram: diagram,
       nodes: { ...diagram.graphSnapshot.nodes },

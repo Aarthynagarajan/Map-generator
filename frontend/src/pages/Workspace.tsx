@@ -47,9 +47,12 @@ export const Workspace = () => {
 
   // Load latest diagram from history list
   useEffect(() => {
+    console.log("History Response", historyList);
     if (historyList && historyList.length > 0) {
       // Find latest version
       const latest = [...historyList].sort((a, b) => b.version - a.version)[0];
+      console.log("Latest Diagram", latest);
+      console.log("graphSnapshot", latest?.graphSnapshot);
       setDiagram(latest);
     } else {
       setDiagram(null);
