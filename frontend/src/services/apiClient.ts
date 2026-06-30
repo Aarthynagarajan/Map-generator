@@ -1,8 +1,15 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    return window.location.port === '5173' ? 'http://localhost:8080' : window.location.origin;
+  }
+  return 'http://localhost:8080';
+};
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -62,7 +69,7 @@ apiClient.interceptors.response.use(
       }
 
       try {
-        const response = await axios.post('http://localhost:8080/auth/refresh', {
+        const response = await axios.post(`${getBaseUrl()}/auth/refresh`, {
           refreshToken: currentRefreshToken,
         });
 

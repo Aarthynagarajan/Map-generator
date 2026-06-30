@@ -62,7 +62,8 @@ export const Workspace = () => {
     showToast('Starting AI extraction...', 'info');
 
     try {
-      const response = await fetch('http://localhost:8080/api/v1/generate', {
+      const baseUrl = window.location.port === '5173' ? 'http://localhost:8080' : window.location.origin;
+      const response = await fetch(`${baseUrl}/api/v1/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -205,7 +206,12 @@ export const Workspace = () => {
     if (!currentDiagram) return;
 
     if (format === 'json') {
-      const dataStr = JSON.stringify(currentDiagram.graphSnapshot, null, 2);
+      const liveSnapshot = {
+        nodes: useDiagramStore.getState().nodes,
+        edges: useDiagramStore.getState().edges,
+        domain: currentDiagram.graphSnapshot.domain,
+      };
+      const dataStr = JSON.stringify(liveSnapshot, null, 2);
       const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
       const exportFileDefaultName = `diagram-${currentDiagram.id}.json`;
 
@@ -215,8 +221,56 @@ export const Workspace = () => {
       linkElement.click();
       showToast('Exported JSON configuration file', 'success');
     } else {
-      // Export SVG mockup
-      showToast('Exporting SVG image file...', 'info');
+      // Export live SVG representation
+      const ns = useDiagramStore.getState().nodes;
+      const es = useDiagramStore.getState().edges;
+
+      const xCoords = Object.values(ns).map(n => n.x);
+      const yCoords = Object.values(ns).map(n => n.y);
+      const minX = Math.min(...xCoords, 0) - 100;
+      const maxX = Math.max(...xCoords, 800) + 200;
+      const minY = Math.min(...yCoords, 0) - 100;
+      const maxY = Math.max(...yCoords, 600) + 200;
+      const width = maxX - minX;
+      const height = maxY - minY;
+
+      let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX} ${minY} ${width} ${height}" width="${width}" height="${height}">`;
+      svgContent += `\n  <rect width="100%" height="100%" fill="#0f172a" />`;
+
+      // Draw edges
+      Object.values(es).forEach(edge => {
+        const fromNode = ns[edge.from];
+        const toNode = ns[edge.to];
+        if (fromNode && toNode) {
+          const x1 = fromNode.x + 50;
+          const y1 = fromNode.y + 30;
+          const x2 = toNode.x + 50;
+          const y2 = toNode.y + 30;
+          const color = edge.medium === 'electrical' ? '#fbbf24' : (edge.medium === 'liquid' ? '#38bdf8' : '#34d399');
+          svgContent += `\n  <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="3" marker-end="url(#arrow)" />`;
+        }
+      });
+
+      // Draw nodes
+      Object.values(ns).forEach(node => {
+        const x = node.x;
+        const y = node.y;
+        const label = node.label || '';
+        const tag = node.tag || '';
+        const border = node.medium === 'electrical' ? '#fbbf24' : (node.medium === 'liquid' ? '#38bdf8' : '#34d399');
+        svgContent += `\n  <rect x="${x}" y="${y}" width="100" height="60" rx="6" fill="#1e293b" stroke="${border}" stroke-width="2" />`;
+        svgContent += `\n  <text x="${x + 50}" y="${y + 25}" fill="#f8fafc" font-size="10" font-family="sans-serif" font-weight="bold" text-anchor="middle">${tag}</text>`;
+        svgContent += `\n  <text x="${x + 50}" y="${y + 45}" fill="#94a3b8" font-size="9" font-family="sans-serif" text-anchor="middle">${label}</text>`;
+      });
+
+      svgContent += `\n  <defs>\n    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">\n      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>\n    </marker>\n  </defs>\n</svg>`;
+
+      const dataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', `diagram-${currentDiagram.id}.svg`);
+      linkElement.click();
+      showToast('Exported SVG image file', 'success');
     }
   };
 

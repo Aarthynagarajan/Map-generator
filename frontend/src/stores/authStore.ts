@@ -1,6 +1,19 @@
 import { create } from 'zustand';
 import { User } from '../types';
 
+const storedUser = localStorage.getItem('user');
+
+let parsedUser: User | null = null;
+
+try {
+  if (storedUser && storedUser !== 'undefined') {
+    parsedUser = JSON.parse(storedUser);
+  }
+} catch (error) {
+  console.warn('Invalid user data found in localStorage. Clearing it.');
+  localStorage.removeItem('user');
+}
+
 interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
@@ -14,7 +27,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   accessToken: localStorage.getItem('accessToken'),
   refreshToken: localStorage.getItem('refreshToken'),
-  user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null,
+  user: parsedUser,
   isAuthenticated: !!localStorage.getItem('accessToken'),
 
   setTokens: (accessToken, refreshToken) => {
@@ -36,6 +49,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    set({ accessToken: null, refreshToken: null, user: null, isAuthenticated: false });
+    set({
+      accessToken: null,
+      refreshToken: null,
+      user: null,
+      isAuthenticated: false,
+    });
   },
 }));

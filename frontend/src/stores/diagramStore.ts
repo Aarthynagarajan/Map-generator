@@ -106,9 +106,10 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
 
     get().addHistoryEntry();
     const currentState = nodes[id].state;
+    const entityClass = nodes[id].entityClass || '';
     const newState = currentState === 'open' || currentState === 'on' 
-        ? (nodes[id].entityClass.includes('BREAKER') || nodes[id].entityClass.includes('SWITCH') ? 'off' : 'closed')
-        : (nodes[id].entityClass.includes('BREAKER') || nodes[id].entityClass.includes('SWITCH') ? 'on' : 'open');
+        ? (entityClass.includes('BREAKER') || entityClass.includes('SWITCH') ? 'off' : 'closed')
+        : (entityClass.includes('BREAKER') || entityClass.includes('SWITCH') ? 'on' : 'open');
 
     const updatedNodes = {
       ...nodes,

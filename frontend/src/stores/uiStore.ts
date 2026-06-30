@@ -9,6 +9,18 @@ export interface Toast {
 
 export type Theme = 'light' | 'dark' | 'system';
 
+const initialTheme = (localStorage.getItem('theme') as Theme) || 'system';
+if (typeof window !== 'undefined') {
+  const root = window.document.documentElement;
+  root.classList.remove('light', 'dark');
+  if (initialTheme === 'system') {
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    root.classList.add(systemTheme);
+  } else {
+    root.classList.add(initialTheme);
+  }
+}
+
 interface UiState {
   theme: Theme;
   toasts: Toast[];
@@ -22,7 +34,7 @@ interface UiState {
 }
 
 export const useUiStore = create<UiState>((set) => ({
-  theme: (localStorage.getItem('theme') as Theme) || 'system',
+  theme: initialTheme,
   toasts: [],
   sidebarOpen: true,
   activeTab: 'generator',
