@@ -42,10 +42,37 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       console.error("Invalid diagram payload", diagram);
       return;
     }
+
+    const rawNodes = diagram.graphSnapshot.nodes;
+    const normalizedNodes: Record<string, TypedNode> = {};
+    if (Array.isArray(rawNodes)) {
+      rawNodes.forEach((node) => {
+        if (node && node.id) normalizedNodes[node.id] = node;
+      });
+    } else if (rawNodes && typeof rawNodes === 'object') {
+      Object.keys(rawNodes).forEach((key) => {
+        const node = rawNodes[key];
+        if (node && node.id) normalizedNodes[node.id] = node;
+      });
+    }
+
+    const rawEdges = diagram.graphSnapshot.edges;
+    const normalizedEdges: Record<string, TypedEdge> = {};
+    if (Array.isArray(rawEdges)) {
+      rawEdges.forEach((edge) => {
+        if (edge && edge.id) normalizedEdges[edge.id] = edge;
+      });
+    } else if (rawEdges && typeof rawEdges === 'object') {
+      Object.keys(rawEdges).forEach((key) => {
+        const edge = rawEdges[key];
+        if (edge && edge.id) normalizedEdges[edge.id] = edge;
+      });
+    }
+
     set({
       currentDiagram: diagram,
-      nodes: { ...diagram.graphSnapshot.nodes },
-      edges: { ...diagram.graphSnapshot.edges },
+      nodes: normalizedNodes,
+      edges: normalizedEdges,
       undoStack: [],
       redoStack: [],
       isDirty: false,
