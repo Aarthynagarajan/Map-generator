@@ -473,8 +473,8 @@ export const Workspace = () => {
               </div>
             ) : (
               /* History revisions comparison view */
-              <div className="flex-1 flex gap-6 h-full">
-                <div className="flex-1 h-full">
+              <div className="flex-1 flex gap-6 min-h-[500px]">
+                <div className="flex-1 flex flex-col">
                   <DiagramViewer />
                 </div>
                 <aside className="w-64 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 rounded-xl flex flex-col gap-3 overflow-y-auto">

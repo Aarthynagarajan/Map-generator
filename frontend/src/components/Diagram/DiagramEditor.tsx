@@ -85,7 +85,7 @@ export const DiagramEditor = ({ diagramId }: DiagramEditorProps) => {
   };
 
   return (
-    <div className="w-full h-full min-h-[500px] border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-900">
+    <div className="w-full flex-1 min-h-[500px] border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-900">
       {/* Editor control toolbar */}
       <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export const DiagramEditor = ({ diagramId }: DiagramEditorProps) => {
         )}
       </div>
 
-      <div className="flex-1 h-full relative">
+      <div className="flex-1 relative">
         <ReactFlow
           nodes={flowNodes}
           edges={flowEdges}
