@@ -44,8 +44,11 @@ public class GenerationService {
                         .data(Map.of("code", "GENERATION_FAILED", "message", ex.getMessage()));
                 emitter.send(errorEvent);
                 emitter.completeWithError(ex);
-            } catch (IOException ioException) {
-                log.error("Failed to send error event to client", ioException);
+            } catch (Exception ioException) {
+                log.warn("Could not write error event to client (likely client disconnected): {}", ioException.getMessage());
+                try {
+                    emitter.complete();
+                } catch (Exception ignored) {}
             }
         }
     }
@@ -57,7 +60,8 @@ public class GenerationService {
                     .data(Map.of("stage", stage, "pct", pct));
             emitter.send(event);
         } catch (IOException e) {
-            log.warn("Failed to send progress event for stage {}: {}", stage, e.getMessage());
+            log.warn("Failed to send progress event for stage {}: {}. Aborting task.", stage, e.getMessage());
+            throw new RuntimeException("Client disconnected: " + e.getMessage(), e);
         }
     }
 }

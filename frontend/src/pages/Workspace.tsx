@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProject } from '../hooks/useProjects';
 import { useHistory } from '../hooks/useDiagram';
@@ -39,6 +39,8 @@ export const Workspace = () => {
   const { showToast } = useUiStore();
   const { accessToken } = useAuthStore();
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const [activeTab, setActiveTab] = useState<'editor' | 'simulation' | 'history'>('editor');
   const [prompt, setPrompt] = useState('');
   const [domain, setDomain] = useState('industrial');
@@ -58,8 +60,16 @@ export const Workspace = () => {
   const handleGenerate = async () => {
     if (!prompt.trim() || !projectId) return;
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     startGen();
     showToast('Starting AI extraction...', 'info');
+
+    let reader: ReadableStreamDefaultReader<Uint8Array> | undefined = undefined;
 
     try {
       const baseUrl = window.location.hostname === 'localhost' && window.location.port !== '8080'
@@ -71,6 +81,7 @@ export const Workspace = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
+        signal: controller.signal,
         body: JSON.stringify({
           projectId,
           prompt: prompt.trim(),
@@ -87,7 +98,7 @@ export const Workspace = () => {
         throw new Error(`Server returned error status: ${response.status}`);
       }
 
-      const reader = response.body?.getReader();
+      reader = response.body?.getReader();
       const decoder = new TextDecoder();
 
       if (!reader) {
@@ -126,19 +137,36 @@ export const Workspace = () => {
             setComplete(parsed.diagramId);
             showToast('Diagram generated successfully!', 'success');
             refetchHistory();
-            break;
+            return;
           } else if (eventName === 'error') {
             const parsed = JSON.parse(eventData);
             setError(parsed.message);
             showToast(parsed.message, 'error');
-            break;
+            return;
           }
         }
       }
     } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.info('Generation request aborted successfully.');
+        return;
+      }
       console.error(err);
       setError(err.message || 'Failed to complete generation');
       showToast(err.message || 'Generation failed', 'error');
+    } finally {
+      if (reader) {
+        try {
+          reader.cancel();
+          reader.releaseLock();
+        } catch (e) {
+          console.warn('Error closing stream reader:', e);
+        }
+      }
+      controller.abort();
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
