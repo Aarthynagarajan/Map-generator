@@ -14,10 +14,12 @@ export const Dashboard = () => {
 
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
+  const [newProjectDomain, setNewProjectDomain] = useState<'INDUSTRIAL' | 'ELECTRICAL' | 'HYDRAULIC'>('INDUSTRIAL');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameName, setRenameName] = useState('');
+  const [renameDomain, setRenameDomain] = useState<'INDUSTRIAL' | 'ELECTRICAL' | 'HYDRAULIC'>('INDUSTRIAL');
   const [showRenameModal, setShowRenameModal] = useState(false);
 
   // Queries and mutations
@@ -30,11 +32,12 @@ export const Dashboard = () => {
     e.preventDefault();
     if (!newProjectName.trim()) return;
     createMutation.mutate(
-      { name: newProjectName.trim(), description: newProjectDesc.trim() },
+      { name: newProjectName.trim(), description: newProjectDesc.trim(), domain: newProjectDomain },
       {
         onSuccess: () => {
           setNewProjectName('');
           setNewProjectDesc('');
+          setNewProjectDomain('INDUSTRIAL');
           setShowCreateModal(false);
         },
       }
@@ -45,7 +48,7 @@ export const Dashboard = () => {
     e.preventDefault();
     if (!renameId || !renameName.trim()) return;
     updateMutation.mutate(
-      { id: renameId, details: { name: renameName.trim() } },
+      { id: renameId, details: { name: renameName.trim(), domain: renameDomain } },
       {
         onSuccess: () => {
           setRenameId(null);
@@ -170,9 +173,14 @@ export const Dashboard = () => {
                   <h3 className="text-base font-bold truncate group-hover:text-brand-600 dark:group-hover:text-brand-400">
                     {proj.name}
                   </h3>
-                  <p className="text-xs opacity-50 mt-1">
-                    Updated {new Date(proj.updatedAt).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300">
+                      {proj.domain}
+                    </span>
+                    <span className="text-[10px] opacity-50">
+                      Updated {new Date(proj.updatedAt).toLocaleDateString()}
+                    </span>
+                  </div>
                   <p className="text-xs opacity-75 mt-3 line-clamp-2">
                     {proj.description || 'No description provided.'}
                   </p>
@@ -184,6 +192,7 @@ export const Dashboard = () => {
                       e.stopPropagation();
                       setRenameId(proj.id);
                       setRenameName(proj.name);
+                      setRenameDomain(proj.domain);
                       setShowRenameModal(true);
                     }}
                     className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-500"
@@ -245,8 +254,20 @@ export const Dashboard = () => {
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                   placeholder="e.g. Steam Cycle Loop"
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none text-slate-900 dark:text-slate-100"
                 />
+              </div>
+              <div>
+                <label className="text-xs font-bold block mb-1">Domain</label>
+                <select
+                  value={newProjectDomain}
+                  onChange={(e) => setNewProjectDomain(e.target.value as any)}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none text-slate-900 dark:text-slate-100"
+                >
+                  <option value="INDUSTRIAL">Industrial</option>
+                  <option value="ELECTRICAL">Electrical</option>
+                  <option value="HYDRAULIC">Hydraulic</option>
+                </select>
               </div>
               <div>
                 <label className="text-xs font-bold block mb-1">Description (Optional)</label>
@@ -254,7 +275,7 @@ export const Dashboard = () => {
                   value={newProjectDesc}
                   onChange={(e) => setNewProjectDesc(e.target.value)}
                   placeholder="Describe your process pipeline..."
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none h-20 resize-none"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none h-20 resize-none text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
@@ -290,7 +311,7 @@ export const Dashboard = () => {
                   required
                   value={renameName}
                   onChange={(e) => setRenameName(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">

@@ -22,12 +22,12 @@ export const projectService = {
     return response.data.data as Project;
   },
 
-  createProject: async (project: { name: string; description?: string }) => {
+  createProject: async (project: { name: string; description?: string; domain: string }) => {
     const response = await apiClient.post<any>('/api/v1/projects', project);
     return response.data.data as Project;
   },
 
-  updateProject: async (id: string, project: { name: string; description?: string }) => {
+  updateProject: async (id: string, project: { name: string; description?: string; domain: string }) => {
     const response = await apiClient.patch<any>(`/api/v1/projects/${id}`, project);
     return response.data.data as Project;
   },

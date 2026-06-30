@@ -7,6 +7,7 @@ export interface User {
 export interface Project {
   id: string;
   name: string;
+  domain: 'INDUSTRIAL' | 'ELECTRICAL' | 'HYDRAULIC';
   description?: string;
   createdAt: string;
   updatedAt: string;
