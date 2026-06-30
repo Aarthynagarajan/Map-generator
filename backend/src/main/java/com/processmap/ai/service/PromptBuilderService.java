@@ -82,10 +82,8 @@ public class PromptBuilderService {
     }
 
     public String buildSystemPrompt(String domainName) {
-        Domain domain;
-        try {
-            domain = Domain.valueOf(domainName.toUpperCase());
-        } catch (IllegalArgumentException e) {
+        Domain domain = Domain.fromString(domainName);
+        if (domain == null) {
             throw new AppException(ErrorCode.VALIDATION_FAILED, "Invalid domain specified", HttpStatus.BAD_REQUEST);
         }
 

@@ -30,7 +30,7 @@ public class SymbolService {
 
         Domain domain = Domain.fromString(entityGraph.domain());
         if (domain == null) {
-            domain = Domain.INDUSTRIAL; // default
+            throw new IllegalArgumentException("Invalid domain: " + entityGraph.domain());
         }
 
         List<SymbolNode> symbolNodes = new ArrayList<>();

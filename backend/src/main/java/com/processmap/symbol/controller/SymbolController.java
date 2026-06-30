@@ -26,7 +26,7 @@ public class SymbolController {
     public ApiResponse<List<SymbolResponseDTO>> getSymbols(@RequestParam String domain) {
         Domain dom = Domain.fromString(domain);
         if (dom == null) {
-            dom = Domain.INDUSTRIAL; // fallback
+            throw new IllegalArgumentException("Invalid domain: " + domain);
         }
 
         List<Symbol> symbols = symbolRepository.findByDomain(dom);
