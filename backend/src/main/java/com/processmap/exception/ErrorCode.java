@@ -1,0 +1,16 @@
+package com.processmap.exception;
+
+public enum ErrorCode {
+    VALIDATION_FAILED,
+    UNAUTHORIZED,
+    FORBIDDEN,
+    NOT_FOUND,
+    RATE_LIMITED,
+    LLM_TIMEOUT,
+    LAYOUT_FAILED,
+    SYMBOL_NOT_FOUND,
+    INTERNAL_ERROR,
+    DUPLICATE_EMAIL,
+    SHARE_LINK_EXPIRED,
+    SHARE_LINK_REVOKED
+}
