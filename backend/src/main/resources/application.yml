@@ -27,7 +27,7 @@ spring:
         api-key: ${GEMINI_API_KEY:mock-key}
         chat:
           options:
-            model: gemini-1.5-flash
+            model: gemini-2.5-flash
             temperature: 0.1
 
 app:

@@ -43,15 +43,23 @@ public class AIOrchestratorService {
 
     @Transactional
     public DiagramResponseDTO generateDiagram(GenerationRequestDTO request, UUID userId) {
+        return generateDiagram(request, userId, null);
+    }
+
+    @Transactional
+    public DiagramResponseDTO generateDiagram(GenerationRequestDTO request, UUID userId, java.util.function.BiConsumer<String, Integer> progressCallback) {
         log.info("Starting orchestrated generation pipeline for user: {}", userId);
 
         // 1. LLM extraction
+        if (progressCallback != null) progressCallback.accept("parsing", 20);
         EntityGraph entityGraph = aiService.extractEntities(request.prompt(), request.domain());
 
         // 2. Symbol mapping
+        if (progressCallback != null) progressCallback.accept("symbol_mapping", 50);
         SymbolGraph symbolGraph = symbolService.mapSymbols(entityGraph);
 
         // 3. Layout engine coordinates
+        if (progressCallback != null) progressCallback.accept("layout", 80);
         LayoutGraph layoutGraph = layoutService.computeLayout(symbolGraph, request.constraints());
 
         // 4. Assemble DiagramGraph snapshot

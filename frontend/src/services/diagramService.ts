@@ -12,8 +12,8 @@ export const diagramService = {
     return response.data.data as Diagram;
   },
 
-  getHistory: async (id: string) => {
-    const response = await apiClient.get<any>(`/api/v1/diagrams/${id}/history`);
+  getHistory: async (projectId: string) => {
+    const response = await apiClient.get<any>(`/api/v1/diagrams/project/${projectId}`);
     return response.data.data as Diagram[];
   },
 

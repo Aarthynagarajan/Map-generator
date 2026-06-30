@@ -39,4 +39,12 @@ public class DiagramController {
             @AuthenticationPrincipal UUID userId) {
         return ApiResponse.of(diagramHistoryService.listVersions(projectId, userId));
     }
+
+    @PostMapping("/{id}/history/restore")
+    public ApiResponse<DiagramResponseDTO> restoreVersion(
+            @PathVariable UUID id,
+            @RequestParam int version,
+            @AuthenticationPrincipal UUID userId) {
+        return ApiResponse.of(diagramHistoryService.restoreVersion(id, version, userId));
+    }
 }

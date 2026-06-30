@@ -3,7 +3,9 @@ import { useAuthStore } from '../stores/authStore';
 
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
-    return window.location.port === '5173' ? 'http://localhost:8080' : window.location.origin;
+    return window.location.hostname === 'localhost' && window.location.port !== '8080'
+      ? 'http://localhost:8080'
+      : window.location.origin;
   }
   return 'http://localhost:8080';
 };

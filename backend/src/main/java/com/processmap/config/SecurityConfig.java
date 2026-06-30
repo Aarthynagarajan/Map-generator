@@ -46,6 +46,11 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\": \"FORBIDDEN\", \"message\": \"Access Denied: " + accessDeniedException.getMessage() + "\"}");
+                })
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()

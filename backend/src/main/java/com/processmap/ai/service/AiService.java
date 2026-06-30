@@ -18,7 +18,6 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -39,13 +38,13 @@ public class AiService {
         long startTime = System.currentTimeMillis();
 
         String systemPrompt = promptBuilderService.buildSystemPrompt(domain);
+        int promptLength = systemPrompt.length() + userPrompt.length();
 
         SystemMessage systemMessage = new SystemMessage(systemPrompt);
         UserMessage userMessage = new UserMessage(userPrompt);
 
-        // Enforce JSON format using GoogleGenAiChatOptions
+        // Enforce JSON format using GoogleGenAiChatOptions (model resolved via application.yml)
         GoogleGenAiChatOptions options = GoogleGenAiChatOptions.builder()
-                .model("gemini-1.5-flash")
                 .temperature(0.1)
                 .responseMimeType("application/json")
                 .build();
@@ -56,21 +55,55 @@ public class AiService {
         try {
             response = chatModel.call(prompt);
         } catch (Exception e) {
-            log.error("LLM call failed: {}", e.getMessage());
+            long latencyMs = System.currentTimeMillis() - startTime;
+            log.error("LLM call failed | Provider: Google Gemini | Latency: {}ms | Prompt Length: {} | Error: {}",
+                    latencyMs, promptLength, e.getMessage(), e);
             throw new AppException(ErrorCode.LLM_TIMEOUT, "LLM call timed out or failed: " + e.getMessage(), HttpStatus.GATEWAY_TIMEOUT);
         }
 
         long latencyMs = System.currentTimeMillis() - startTime;
-        String content = response.getResult().getOutput().getText();
+        String rawContent = response.getResult().getOutput().getText();
+        String cleanedContent = cleanJsonContent(rawContent);
 
-        log.info("LLM call completed in {}ms", latencyMs);
+        String modelUsed = response.getMetadata() != null ? response.getMetadata().getModel() : "unknown";
+        int responseLength = cleanedContent != null ? cleanedContent.length() : 0;
+
+        log.info("LLM call successful | Provider: Google Gemini | Latency: {}ms | Model: {} | Prompt Length: {} | Response Length: {}",
+                latencyMs, modelUsed, promptLength, responseLength);
 
         try {
-            EntityGraph entityGraph = objectMapper.readValue(content, EntityGraph.class);
+            EntityGraph entityGraph = objectMapper.readValue(cleanedContent, EntityGraph.class);
             return entityGraph;
         } catch (Exception e) {
-            log.error("Failed to parse LLM structured response to EntityGraph", e);
+            log.error("Failed to parse LLM structured response to EntityGraph. Cleaned Content: {}", cleanedContent, e);
             throw new AppException(ErrorCode.VALIDATION_FAILED, "Failed to parse structured JSON from LLM: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    private String cleanJsonContent(String content) {
+        if (content == null) {
+            return "";
+        }
+        String cleaned = content.trim();
+
+        // Strip markdown code block markers
+        if (cleaned.startsWith("```")) {
+            int firstLineEnd = cleaned.indexOf('\n');
+            if (firstLineEnd != -1) {
+                cleaned = cleaned.substring(firstLineEnd).trim();
+            }
+            if (cleaned.endsWith("```")) {
+                cleaned = cleaned.substring(0, cleaned.length() - 3).trim();
+            }
+        }
+
+        // Find first '{' and last '}'
+        int firstBrace = cleaned.indexOf('{');
+        int lastBrace = cleaned.lastIndexOf('}');
+        if (firstBrace != -1 && lastBrace != -1 && lastBrace > firstBrace) {
+            cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+        }
+
+        return cleaned;
     }
 }

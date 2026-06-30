@@ -23,18 +23,10 @@ public class GenerationService {
     public void generateAsync(GenerationRequestDTO request, UUID userId, SseEmitter emitter) {
         log.info("Starting async generation task for user: {}", userId);
         try {
-            // Stage 1: Parsing
-            sendProgress(emitter, "parsing", 20);
-
-            // Simulate parsing stage delay or call AI orchestrator components sequentially
-            // Stage 2: Symbol Mapping
-            sendProgress(emitter, "symbol_mapping", 50);
-
-            // Stage 3: Layout computation
-            sendProgress(emitter, "layout", 80);
-
-            // Execute full pipeline and persistence
-            DiagramResponseDTO response = aiOrchestratorService.generateDiagram(request, userId);
+            // Execute full pipeline and persistence passing progress callback
+            DiagramResponseDTO response = aiOrchestratorService.generateDiagram(request, userId, (stage, pct) -> {
+                sendProgress(emitter, stage, pct);
+            });
 
             // Send completion event
             SseEmitter.SseEventBuilder completeEvent = SseEmitter.event()

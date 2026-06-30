@@ -107,6 +107,33 @@ public class DiagramHistoryService {
         return diagramMapper.toResponseDTO(saved);
     }
 
+    @Transactional
+    public DiagramResponseDTO restoreVersion(UUID diagramId, int version, UUID userId) {
+        log.info("Restoring project diagram version for diagram ID: {} to version: {}", diagramId, version);
+        Diagram currentDiagram = diagramRepository.findById(diagramId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND, "Diagram not found", HttpStatus.NOT_FOUND));
+
+        validateOwnership(currentDiagram.getProject(), userId);
+
+        List<Diagram> diagrams = diagramRepository.findByProjectIdOrderByVersionDesc(currentDiagram.getProject().getId());
+        Diagram target = null;
+        for (Diagram d : diagrams) {
+            if (d.getVersion() == version) {
+                d.setIsCurrent(true);
+                target = d;
+            } else {
+                d.setIsCurrent(false);
+            }
+        }
+
+        if (target == null) {
+            throw new AppException(ErrorCode.NOT_FOUND, "Diagram version not found", HttpStatus.NOT_FOUND);
+        }
+
+        diagramRepository.saveAll(diagrams);
+        return diagramMapper.toResponseDTO(target);
+    }
+
     private void validateOwnership(Project project, UUID userId) {
         if (!project.getUser().getId().equals(userId)) {
             throw new AppException(ErrorCode.FORBIDDEN, "Access denied. You do not own this project", HttpStatus.FORBIDDEN);

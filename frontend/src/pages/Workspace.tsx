@@ -62,7 +62,9 @@ export const Workspace = () => {
     showToast('Starting AI extraction...', 'info');
 
     try {
-      const baseUrl = window.location.port === '5173' ? 'http://localhost:8080' : window.location.origin;
+      const baseUrl = window.location.hostname === 'localhost' && window.location.port !== '8080'
+        ? 'http://localhost:8080'
+        : window.location.origin;
       const response = await fetch(`${baseUrl}/api/v1/generate`, {
         method: 'POST',
         headers: {
