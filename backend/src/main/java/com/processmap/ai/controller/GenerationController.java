@@ -37,7 +37,7 @@ public class GenerationController {
             log.error("Emitter error for user {}", userId, ex);
             emitter.complete();
         });
-
+        log.info("Authenticated user = {}", userId);
         generationService.generateAsync(request, userId, emitter);
         return emitter;
     }
