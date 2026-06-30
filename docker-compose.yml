@@ -35,7 +35,9 @@ services:
         condition: service_healthy
 
   nginx:
-    build: ./nginx
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
     container_name: processpro-nginx
     ports:
       - "80:80"
