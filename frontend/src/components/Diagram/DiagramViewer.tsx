@@ -49,6 +49,24 @@ const DiagramViewerInner = () => {
           nodesDraggable={false}
           nodesConnectable={false}
           elementsSelectable={false}
+          onInit={(_instance) => {
+              console.log("==== ReactFlow Mounted ====");
+              console.log("Component:", "DiagramViewer");
+
+              const rf = document.querySelectorAll(".react-flow");
+
+              console.log("ReactFlow count:", rf.length);
+
+              rf.forEach((el, index) => {
+                  console.log({
+                      index,
+                      width: el.clientWidth,
+                      height: el.clientHeight,
+                      parentWidth: el.parentElement?.clientWidth,
+                      parentHeight: el.parentElement?.clientHeight
+                  });
+              });
+          }}
         >
           <Controls />
           <MiniMap />
