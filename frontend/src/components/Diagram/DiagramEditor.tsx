@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { ReactFlow, MiniMap, Controls, Background, useReactFlow } from '@xyflow/react';
+import { ReactFlow, MiniMap, Controls, Background, useReactFlow, ReactFlowProvider } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import { useDiagramStore } from '../../stores/diagramStore';
@@ -20,7 +20,7 @@ interface DiagramEditorProps {
   diagramId: string;
 }
 
-export const DiagramEditor = ({ diagramId }: DiagramEditorProps) => {
+const DiagramEditorInner = ({ diagramId }: DiagramEditorProps) => {
   const { nodes, edges, updateNodePosition, renameNode, deleteNode, undo, redo, undoStack, redoStack } = useDiagramStore();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -177,5 +177,13 @@ console.log("Flow edges:", flowEdges.length);
         </ReactFlow>
       </div>
     </div>
+  );
+};
+
+export const DiagramEditor = (props: DiagramEditorProps) => {
+  return (
+    <ReactFlowProvider>
+      <DiagramEditorInner {...props} />
+    </ReactFlowProvider>
   );
 };

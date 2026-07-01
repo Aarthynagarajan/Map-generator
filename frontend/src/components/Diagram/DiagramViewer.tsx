@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { ReactFlow, MiniMap, Controls, Background, useReactFlow } from '@xyflow/react';
+import { ReactFlow, MiniMap, Controls, Background, useReactFlow, ReactFlowProvider } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import { useDiagramStore } from '../../stores/diagramStore';
@@ -15,7 +15,7 @@ const edgeTypes = {
   processEdge: ProcessEdge as any,
 };
 
-export const DiagramViewer = () => {
+const DiagramViewerInner = () => {
   const { nodes, edges } = useDiagramStore();
   const { activePaths } = useSimulationStore();
   const { fitView } = useReactFlow();
@@ -70,5 +70,13 @@ export const DiagramViewer = () => {
         </ReactFlow>
       </div>
     </div>
+  );
+};
+
+export const DiagramViewer = () => {
+  return (
+    <ReactFlowProvider>
+      <DiagramViewerInner />
+    </ReactFlowProvider>
   );
 };
