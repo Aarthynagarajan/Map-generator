@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { ReactFlow, MiniMap, Controls, Background } from '@xyflow/react';
+import { useMemo, useEffect } from 'react';
+import { ReactFlow, MiniMap, Controls, Background, useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import { useDiagramStore } from '../../stores/diagramStore';
@@ -18,6 +18,7 @@ const edgeTypes = {
 export const DiagramViewer = () => {
   const { nodes, edges } = useDiagramStore();
   const { activePaths } = useSimulationStore();
+  const { fitView } = useReactFlow();
 
   const flowNodes = useMemo(() => {
     return Object.values(nodes).map((n) => ({
@@ -40,6 +41,15 @@ export const DiagramViewer = () => {
       } as any,
     }));
   }, [edges, activePaths]);
+
+  useEffect(() => {
+    if (flowNodes.length > 0) {
+      const timer = setTimeout(() => {
+        fitView({ duration: 200 });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [flowNodes, fitView]);
 
   return (
     <div className="w-full flex-1 min-h-[500px] border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-900">

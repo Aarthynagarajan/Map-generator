@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { ReactFlow, MiniMap, Controls, Background } from '@xyflow/react';
+import { useMemo, useState, useEffect } from 'react';
+import { ReactFlow, MiniMap, Controls, Background, useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import { useDiagramStore } from '../../stores/diagramStore';
@@ -26,6 +26,8 @@ export const DiagramEditor = ({ diagramId }: DiagramEditorProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState('');
 
+  const { fitView } = useReactFlow();
+
   // Setup auto-save hook
   useAutoSave(diagramId);
 
@@ -50,6 +52,15 @@ export const DiagramEditor = ({ diagramId }: DiagramEditorProps) => {
       } as any,
     }));
   }, [edges]);
+
+  useEffect(() => {
+    if (flowNodes.length > 0) {
+      const timer = setTimeout(() => {
+        fitView({ duration: 200 });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [flowNodes, fitView]);
 
   const onNodeDragStop = (_event: any, node: any) => {
     updateNodePosition(node.id, node.position.x, node.position.y);
