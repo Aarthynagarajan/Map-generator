@@ -1,21 +1,24 @@
-import { Handle, Position } from "@xyflow/react";
+import { Handle, Position, NodeProps } from "@xyflow/react";
 
-export const ProcessNode = ({ data }: any) => {
+export function ProcessNode({ data }: NodeProps<any>) {
   return (
     <div
       style={{
-        width: 120,
-        height: 60,
+        width: 140,
+        height: 70,
         background: "red",
         color: "white",
-        border: "2px solid white"
+        border: "3px solid yellow",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
       }}
     >
-      {data?.label}
+      {String(data?.label)}
 
-      <Handle type="target" position={Position.Left} />
+      <Handle id="left" type="target" position={Position.Left} />
 
-      <Handle type="source" position={Position.Right} />
+      <Handle id="right" type="source" position={Position.Right} />
     </div>
   );
-};
+}
