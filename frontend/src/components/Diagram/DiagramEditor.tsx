@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { ReactFlow, MiniMap, Controls, Background, useReactFlow, ReactFlowProvider } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -19,6 +19,24 @@ const DiagramEditorInner = ({ diagramId }: DiagramEditorProps) => {
   const [editLabel, setEditLabel] = useState('');
 
   const { fitView } = useReactFlow();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+
+  useLayoutEffect(() => {
+    const observer = new ResizeObserver(() => {
+      const el = containerRef.current;
+      if (el && el.clientWidth > 0 && el.clientHeight > 0) {
+        setReady(true);
+        observer.disconnect();
+      }
+    });
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   // Setup auto-save hook
   useAutoSave(diagramId);
@@ -151,37 +169,39 @@ console.log("Flow edges:", flowEdges.length);
         )}
       </div>
 
-      <div className="flex-1 h-full relative flex flex-col">
-        <ReactFlow
-          nodes={flowNodes}
-          edges={flowEdges}
-          onNodeDragStop={onNodeDragStop}
-          onNodeClick={onNodeClick}
-          onPaneClick={onPaneClick}
-          fitView
-          onInit={(_instance) => {
-              console.log("==== ReactFlow Mounted ====");
-              console.log("Component:", "DiagramEditor");
+      <div ref={containerRef} className="flex-1 h-full relative flex flex-col">
+        {ready && (
+          <ReactFlow
+            nodes={flowNodes}
+            edges={flowEdges}
+            onNodeDragStop={onNodeDragStop}
+            onNodeClick={onNodeClick}
+            onPaneClick={onPaneClick}
+            fitView
+            onInit={(_instance) => {
+                console.log("==== ReactFlow Mounted ====");
+                console.log("Component:", "DiagramEditor");
 
-              const rf = document.querySelectorAll(".react-flow");
+                const rf = document.querySelectorAll(".react-flow");
 
-              console.log("ReactFlow count:", rf.length);
+                console.log("ReactFlow count:", rf.length);
 
-              rf.forEach((el, index) => {
-                  console.log({
-                      index,
-                      width: el.clientWidth,
-                      height: el.clientHeight,
-                      parentWidth: el.parentElement?.clientWidth,
-                      parentHeight: el.parentElement?.clientHeight
-                  });
-              });
-          }}
-        >
-          <Controls />
-          <MiniMap />
-          <Background color="#cbd5e1" gap={16} />
-        </ReactFlow>
+                rf.forEach((el, index) => {
+                    console.log({
+                        index,
+                        width: el.clientWidth,
+                        height: el.clientHeight,
+                        parentWidth: el.parentElement?.clientWidth,
+                        parentHeight: el.parentElement?.clientHeight
+                    });
+                });
+            }}
+          >
+            <Controls />
+            <MiniMap />
+            <Background color="#cbd5e1" gap={16} />
+          </ReactFlow>
+        )}
       </div>
     </div>
   );
