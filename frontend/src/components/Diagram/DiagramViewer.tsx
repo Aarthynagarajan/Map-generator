@@ -3,44 +3,32 @@ import { ReactFlow, MiniMap, Controls, Background, useReactFlow, ReactFlowProvid
 import '@xyflow/react/dist/style.css';
 
 import { useDiagramStore } from '../../stores/diagramStore';
-import { useSimulationStore } from '../../stores/simulationStore';
-import { ProcessNode } from './ProcessNode';
-import { ProcessEdge } from './ProcessEdge';
 
-const nodeTypes = {
-  processNode: ProcessNode as any,
-};
-
-const edgeTypes = {
-  processEdge: ProcessEdge as any,
-};
 
 const DiagramViewerInner = () => {
   const { nodes, edges } = useDiagramStore();
-  const { activePaths } = useSimulationStore();
   const { fitView } = useReactFlow();
 
   const flowNodes = useMemo(() => {
-    return Object.values(nodes).map((n) => ({
+    return Object.values(nodes).map(n => ({
       id: n.id,
-      type: 'processNode',
-      position: { x: n.x, y: n.y },
-      data: n as any,
+      position: {
+        x: n.x,
+        y: n.y
+      },
+      data: {
+        label: n.label
+      }
     }));
   }, [nodes]);
 
   const flowEdges = useMemo(() => {
-    return Object.values(edges).map((e) => ({
+    return Object.values(edges).map(e => ({
       id: e.id,
       source: e.from,
-      target: e.to,
-      type: 'processEdge',
-      data: {
-        ...e,
-        isActive: activePaths.has(e.id),
-      } as any,
+      target: e.to
     }));
-  }, [edges, activePaths]);
+  }, [edges]);
 
   useEffect(() => {
     if (flowNodes.length > 0) {
@@ -57,8 +45,6 @@ const DiagramViewerInner = () => {
         <ReactFlow
           nodes={flowNodes}
           edges={flowEdges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
           fitView
           nodesDraggable={false}
           nodesConnectable={false}

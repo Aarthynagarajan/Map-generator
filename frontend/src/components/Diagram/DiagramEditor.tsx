@@ -4,17 +4,9 @@ import '@xyflow/react/dist/style.css';
 
 import { useDiagramStore } from '../../stores/diagramStore';
 import { useAutoSave } from '../../hooks/useAutoSave';
-import { ProcessNode } from './ProcessNode';
-import { ProcessEdge } from './ProcessEdge';
 import { Undo2, Redo2, Trash2, Edit2, Check, X } from 'lucide-react';
 
-const nodeTypes = {
-  processNode: ProcessNode as any,
-};
 
-const edgeTypes = {
-  processEdge: ProcessEdge as any,
-};
 
 interface DiagramEditorProps {
   diagramId: string;
@@ -32,24 +24,23 @@ const DiagramEditorInner = ({ diagramId }: DiagramEditorProps) => {
   useAutoSave(diagramId);
 
   const flowNodes = useMemo(() => {
-    return Object.values(nodes).map((n) => ({
+    return Object.values(nodes).map(n => ({
       id: n.id,
-      type: 'processNode',
-      position: { x: n.x, y: n.y },
-      data: n as any,
+      position: {
+        x: n.x,
+        y: n.y
+      },
+      data: {
+        label: n.label
+      }
     }));
   }, [nodes]);
 
   const flowEdges = useMemo(() => {
-    return Object.values(edges).map((e) => ({
+    return Object.values(edges).map(e => ({
       id: e.id,
       source: e.from,
-      target: e.to,
-      type: 'processEdge',
-      data: {
-        ...e,
-        isActive: false, // Editor doesn't showcase active paths simulation
-      } as any,
+      target: e.to
     }));
   }, [edges]);
 
@@ -164,8 +155,6 @@ console.log("Flow edges:", flowEdges.length);
         <ReactFlow
           nodes={flowNodes}
           edges={flowEdges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
           onNodeDragStop={onNodeDragStop}
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
