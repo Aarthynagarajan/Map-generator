@@ -43,7 +43,7 @@ export const DiagramViewer = () => {
 
   return (
     <div className="w-full flex-1 min-h-[500px] border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-900">
-      <div className="flex-1 relative">
+      <div className="flex-1 h-full relative flex flex-col">
         <ReactFlow
           nodes={flowNodes}
           edges={flowEdges}

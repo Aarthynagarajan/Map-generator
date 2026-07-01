@@ -149,7 +149,7 @@ console.log("Flow edges:", flowEdges.length);
         )}
       </div>
 
-      <div className="flex-1 relative">
+      <div className="flex-1 h-full relative flex flex-col">
         <ReactFlow
           nodes={flowNodes}
           edges={flowEdges}
