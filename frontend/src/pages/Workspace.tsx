@@ -135,13 +135,24 @@ export const Workspace = () => {
           if (eventName === 'progress') {
             const parsed = JSON.parse(eventData);
             updateProgress(parsed.stage as GenStage, parsed.pct);
-          } else if (eventName === 'complete') {
-            const parsed = JSON.parse(eventData);
-            setComplete(parsed.diagramId);
-            showToast('Diagram generated successfully!', 'success');
-            refetchHistory();
-            return;
-          } else if (eventName === 'error') {
+          } else if (eventName === "complete") {
+    const parsed = JSON.parse(eventData);
+
+    setComplete(parsed.diagramId);
+
+    showToast("Diagram generated successfully!", "success");
+
+    // Refresh history
+    await refetchHistory();
+
+    // Fetch the NEW diagram
+    const latestDiagram = await diagramService.getDiagram(parsed.diagramId);
+
+    // Put it into Zustand
+    useDiagramStore.getState().setDiagram(latestDiagram);
+
+    return;
+} else if (eventName === 'error') {
             const parsed = JSON.parse(eventData);
             setError(parsed.message);
             showToast(parsed.message, 'error');

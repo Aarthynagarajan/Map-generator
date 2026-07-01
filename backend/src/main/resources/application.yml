@@ -24,7 +24,7 @@ spring:
   ai:
     google:
       genai:
-        api-key: ${GEMINI_API_KEY:mock-key}
+        api-key: ${GEMINI_API_KEY:}
         chat:
           options:
             model: gemini-2.5-flash

@@ -83,7 +83,10 @@ export const DiagramEditor = ({ diagramId }: DiagramEditorProps) => {
       setSelectedNodeId(null);
     }
   };
-
+console.log("Nodes in store:", nodes);
+console.log("Edges in store:", edges);
+console.log("Flow nodes:", flowNodes.length);
+console.log("Flow edges:", flowEdges.length);
   return (
     <div className="w-full flex-1 min-h-[500px] border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-900">
       {/* Editor control toolbar */}

@@ -23,6 +23,10 @@ public abstract class DiagramMapper {
     @Mapping(target = "nodes", expression = "java(mapNodes(diagram.getGraphSnapshot()))")
     @Mapping(target = "edges", expression = "java(mapEdges(diagram.getGraphSnapshot()))")
     @Mapping(target = "generationMetadata", expression = "java(mapMetadata(diagram.getPromptMetadata()))")
+    @Mapping(
+    target = "graphSnapshot",
+    expression = "java(diagram.getGraphSnapshot())"
+)
     public abstract DiagramResponseDTO toResponseDTO(Diagram diagram);
 
     protected List<LayoutNodeDTO> mapNodes(JsonNode graphSnapshot) {

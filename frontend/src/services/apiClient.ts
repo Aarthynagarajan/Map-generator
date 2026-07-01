@@ -21,7 +21,7 @@ apiClient.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().accessToken;
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.set('Authorization', `Bearer ${token}`);
     }
     return config;
   },
@@ -53,7 +53,7 @@ apiClient.interceptors.response.use(
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
+            originalRequest.headers.set('Authorization', `Bearer ${token}`);
             return apiClient(originalRequest);
           })
           .catch((err) => Promise.reject(err));
@@ -78,8 +78,8 @@ apiClient.interceptors.response.use(
         const { accessToken, refreshToken: newRefreshToken } = response.data.data;
         useAuthStore.getState().setTokens(accessToken, newRefreshToken);
 
-        apiClient.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        originalRequest.headers.set('Authorization', `Bearer ${accessToken}`);
 
         processQueue(null, accessToken);
         isRefreshing = false;
