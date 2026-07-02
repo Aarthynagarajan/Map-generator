@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.UUID;
 
 public record ScenarioRequestDTO(
-    @NotNull(message = "Diagram ID is required")
     UUID diagramId,
 
     @NotBlank(message = "Scenario name is required")

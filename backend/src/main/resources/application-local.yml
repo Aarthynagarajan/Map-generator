@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:processpro;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        schema:
+          enum:
+            use_check_constraints: false
+  flyway:
+    enabled: false
+  sql:
+    init:
+      data-locations: classpath:db/migration/V4__seed_symbols.sql,classpath:db/migration/V5__seed_synonyms.sql,classpath:db/migration/V6__convert_domain_to_uppercase.sql
+      mode: always
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY:}

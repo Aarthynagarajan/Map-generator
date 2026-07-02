@@ -119,7 +119,7 @@ console.log("Edges in store:", edges);
 console.log("Flow nodes:", flowNodes.length);
 console.log("Flow edges:", flowEdges.length);
   return (
-    <div className="w-full flex-1 min-h-[500px] border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-900">
+    <div className="w-full h-full border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-900">
       {/* Editor control toolbar */}
       <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
@@ -180,7 +180,7 @@ console.log("Flow edges:", flowEdges.length);
         )}
       </div>
 
-      <div ref={containerRef} className="flex-1 h-full relative flex flex-col">
+      <div ref={containerRef} className="flex-1 relative flex flex-col">
         {ready && (
           <ReactFlow
             nodes={flowNodes}

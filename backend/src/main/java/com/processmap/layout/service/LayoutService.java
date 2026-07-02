@@ -76,6 +76,7 @@ public class LayoutService {
             queue.add(firstId);
         }
 
+        int maxLevelsLimit = allNodes.size();
         while (!queue.isEmpty()) {
             String currId = queue.poll();
             int currLevel = levels.get(currId);
@@ -83,12 +84,16 @@ public class LayoutService {
             List<String> children = adj.get(currId);
             if (children != null) {
                 for (String childId : children) {
+                    int newLvl = currLevel + 1;
+                    if (newLvl >= maxLevelsLimit) {
+                        continue;
+                    }
                     if (!levels.containsKey(childId)) {
-                        levels.put(childId, currLevel + 1);
+                        levels.put(childId, newLvl);
                         queue.add(childId);
-                    } else {
-                        // Keep max level path to avoid backward overlaps
-                        levels.put(childId, Math.max(levels.get(childId), currLevel + 1));
+                    } else if (levels.get(childId) < newLvl) {
+                        levels.put(childId, newLvl);
+                        queue.add(childId);
                     }
                 }
             }

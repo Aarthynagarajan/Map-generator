@@ -142,29 +142,42 @@ public class DiagramHistoryService {
 
     private JsonNode mergeSnapshot(JsonNode currentSnapshot, JsonNode partialUpdate) {
         try {
-            ObjectNode root = (ObjectNode) currentSnapshot.deepCopy();
+            JsonNode parsedSnapshot = currentSnapshot;
+            if (currentSnapshot.isTextual()) {
+                parsedSnapshot = objectMapper.readTree(currentSnapshot.asText());
+            }
+            ObjectNode root = (ObjectNode) parsedSnapshot.deepCopy();
 
             if (partialUpdate.has("nodes")) {
-                ArrayNode currentNodes = (ArrayNode) root.get("nodes");
+                JsonNode nodesNode = root.get("nodes");
                 JsonNode updateNodes = partialUpdate.get("nodes");
 
                 Map<String, ObjectNode> nodeMap = new HashMap<>();
-                for (JsonNode n : currentNodes) {
-                    nodeMap.put(n.get("id").asText(), (ObjectNode) n);
+                if (nodesNode.isArray()) {
+                    for (JsonNode n : nodesNode) {
+                        nodeMap.put(n.get("id").asText(), (ObjectNode) n);
+                    }
+                } else if (nodesNode.isObject()) {
+                    nodesNode.fields().forEachRemaining(entry -> {
+                        nodeMap.put(entry.getKey(), (ObjectNode) entry.getValue());
+                    });
                 }
 
                 for (JsonNode un : updateNodes) {
                     String nodeId = un.get("id").asText();
                     if (nodeMap.containsKey(nodeId)) {
                         ObjectNode nodeToUpdate = nodeMap.get(nodeId);
-                        // Merge fields: position, data fields (tag, label, etc.), locked, width, height
-                        if (un.has("position")) {
-                            nodeToUpdate.set("position", un.get("position"));
+                        if (un.has("x")) {
+                            nodeToUpdate.set("x", un.get("x"));
                         }
-                        if (un.has("data")) {
-                            ObjectNode targetData = (ObjectNode) nodeToUpdate.get("data");
-                            JsonNode updateData = un.get("data");
-                            updateData.fields().forEachRemaining(entry -> targetData.set(entry.getKey(), entry.getValue()));
+                        if (un.has("y")) {
+                            nodeToUpdate.set("y", un.get("y"));
+                        }
+                        if (un.has("label")) {
+                            nodeToUpdate.set("label", un.get("label"));
+                        }
+                        if (un.has("state")) {
+                            nodeToUpdate.set("state", un.get("state"));
                         }
                         if (un.has("locked")) {
                             nodeToUpdate.set("locked", un.get("locked"));
@@ -180,22 +193,35 @@ public class DiagramHistoryService {
             }
 
             if (partialUpdate.has("edges")) {
-                ArrayNode currentEdges = (ArrayNode) root.get("edges");
+                JsonNode edgesNode = root.get("edges");
                 JsonNode updateEdges = partialUpdate.get("edges");
 
                 Map<String, ObjectNode> edgeMap = new HashMap<>();
-                for (JsonNode e : currentEdges) {
-                    edgeMap.put(e.get("id").asText(), (ObjectNode) e);
+                if (edgesNode.isArray()) {
+                    for (JsonNode e : edgesNode) {
+                        edgeMap.put(e.get("id").asText(), (ObjectNode) e);
+                    }
+                } else if (edgesNode.isObject()) {
+                    edgesNode.fields().forEachRemaining(entry -> {
+                        edgeMap.put(entry.getKey(), (ObjectNode) entry.getValue());
+                    });
                 }
 
                 for (JsonNode ue : updateEdges) {
                     String edgeId = ue.get("id").asText();
                     if (edgeMap.containsKey(edgeId)) {
                         ObjectNode edgeToUpdate = edgeMap.get(edgeId);
-                        if (ue.has("data")) {
-                            ObjectNode targetData = (ObjectNode) edgeToUpdate.get("data");
-                            JsonNode updateData = ue.get("data");
-                            updateData.fields().forEachRemaining(entry -> targetData.set(entry.getKey(), entry.getValue()));
+                        if (ue.has("label")) {
+                            edgeToUpdate.set("label", ue.get("label"));
+                        }
+                        if (ue.has("branchCondition")) {
+                            edgeToUpdate.set("branchCondition", ue.get("branchCondition"));
+                        }
+                        if (ue.has("direction")) {
+                            edgeToUpdate.set("direction", ue.get("direction"));
+                        }
+                        if (ue.has("medium")) {
+                            edgeToUpdate.set("medium", ue.get("medium"));
                         }
                     }
                 }

@@ -34,7 +34,19 @@ public abstract class DiagramMapper {
             return Collections.emptyList();
         }
         try {
-            return objectMapper.convertValue(graphSnapshot.get("nodes"), new TypeReference<List<LayoutNodeDTO>>() {});
+            JsonNode nodesNode = graphSnapshot.get("nodes");
+            if (nodesNode.isArray()) {
+                return objectMapper.convertValue(nodesNode, new TypeReference<List<LayoutNodeDTO>>() {});
+            } else if (nodesNode.isObject()) {
+                java.util.List<LayoutNodeDTO> list = new java.util.ArrayList<>();
+                nodesNode.fields().forEachRemaining(entry -> {
+                    try {
+                        list.add(objectMapper.treeToValue(entry.getValue(), LayoutNodeDTO.class));
+                    } catch (Exception ignored) {}
+                });
+                return list;
+            }
+            return Collections.emptyList();
         } catch (Exception e) {
             return Collections.emptyList();
         }
@@ -45,7 +57,19 @@ public abstract class DiagramMapper {
             return Collections.emptyList();
         }
         try {
-            return objectMapper.convertValue(graphSnapshot.get("edges"), new TypeReference<List<LayoutEdgeDTO>>() {});
+            JsonNode edgesNode = graphSnapshot.get("edges");
+            if (edgesNode.isArray()) {
+                return objectMapper.convertValue(edgesNode, new TypeReference<List<LayoutEdgeDTO>>() {});
+            } else if (edgesNode.isObject()) {
+                java.util.List<LayoutEdgeDTO> list = new java.util.ArrayList<>();
+                edgesNode.fields().forEachRemaining(entry -> {
+                    try {
+                        list.add(objectMapper.treeToValue(entry.getValue(), LayoutEdgeDTO.class));
+                    } catch (Exception ignored) {}
+                });
+                return list;
+            }
+            return Collections.emptyList();
         } catch (Exception e) {
             return Collections.emptyList();
         }

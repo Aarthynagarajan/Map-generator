@@ -61,9 +61,10 @@ export interface DiagramGraph {
 export interface Diagram {
   id: string;
   projectId: string;
-  prompt: string;
+  promptText: string;
   graphSnapshot: DiagramGraph;
   version: number;
+  isCurrent: boolean;
   createdAt: string;
 }
 

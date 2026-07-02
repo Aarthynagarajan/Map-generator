@@ -40,10 +40,10 @@ public class ScenarioService {
         JsonNode graph = diagram.getGraphSnapshot();
         if (graph != null && graph.has("nodes")) {
             for (JsonNode node : graph.get("nodes")) {
-                String entityClass = node.path("data").path("entityClass").asText();
+                String entityClass = node.path("entityClass").asText();
                 if (isStopperClass(entityClass)) {
                     String defaultState = isElectricalClass(entityClass) ? "on" : "open";
-                    defaultStoppers.put(node.get("id").asText(), defaultState);
+                    defaultStoppers.put(node.path("id").asText(), defaultState);
                 }
             }
         }

@@ -46,14 +46,15 @@ export const Workspace = () => {
   const [domain, setDomain] = useState('industrial');
 
   // Load latest diagram from history list
+  // Load current diagram from history list
   useEffect(() => {
     console.log("History Response", historyList);
     if (historyList && historyList.length > 0) {
-      // Find latest version
-      const latest = [...historyList].sort((a, b) => b.version - a.version)[0];
-      console.log("Latest Diagram", latest);
-      console.log("graphSnapshot", latest?.graphSnapshot);
-      setDiagram(latest);
+      // Find the diagram marked as current, fallback to the highest version
+      const current = historyList.find(d => d.isCurrent) || [...historyList].sort((a, b) => b.version - a.version)[0];
+      console.log("Current Diagram", current);
+      console.log("graphSnapshot", current?.graphSnapshot);
+      setDiagram(current);
     } else {
       setDiagram(null);
     }
@@ -319,7 +320,7 @@ export const Workspace = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex flex-col">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex flex-col overflow-hidden">
       {/* Header toolbar */}
       <header className="bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
@@ -444,12 +445,12 @@ export const Workspace = () => {
         </aside>
 
         {/* Center / Editor Canvas Area */}
-        <section className="flex-1 h-full relative p-4 flex flex-col">
+        <section className="flex-1 h-full relative p-4 flex flex-col overflow-hidden">
           {currentDiagram ? (
             activeTab === 'editor' ? (
               <DiagramEditor diagramId={currentDiagram.id} />
             ) : activeTab === 'simulation' ? (
-              <div className="flex-1 flex flex-col gap-4 relative">
+              <div className="flex-1 h-full flex flex-col relative overflow-hidden">
                 {/* Simulation Control Overlay */}
                 <div className="absolute top-4 left-4 z-10 bg-white/90 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center gap-3 shadow-md">
                   <button
@@ -484,8 +485,8 @@ export const Workspace = () => {
               </div>
             ) : (
               /* History revisions comparison view */
-              <div className="flex-1 flex gap-6 min-h-[500px]">
-                <div className="flex-1 flex flex-col">
+              <div className="flex-1 h-full flex gap-6 overflow-hidden">
+                <div className="flex-1 h-full flex flex-col overflow-hidden">
                   <DiagramViewer />
                 </div>
                 <aside className="w-64 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 rounded-xl flex flex-col gap-3 overflow-y-auto">
@@ -505,7 +506,7 @@ export const Workspace = () => {
                           <span>Revision v{hist.version}</span>
                           <span className="opacity-55">{new Date(hist.createdAt).toLocaleTimeString()}</span>
                         </div>
-                        <p className="text-[10px] opacity-60 truncate mt-1">{hist.prompt}</p>
+                        <p className="text-[10px] opacity-60 truncate mt-1">{hist.promptText}</p>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

@@ -43,7 +43,22 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       return;
     }
 
-    const rawNodes = diagram.graphSnapshot.nodes;
+    let snapshot = diagram.graphSnapshot;
+    if (typeof snapshot === 'string') {
+      try {
+        snapshot = JSON.parse(snapshot);
+      } catch (e) {
+        console.error("Failed to parse graphSnapshot string", e);
+        return;
+      }
+    }
+
+    const parsedDiagram = {
+      ...diagram,
+      graphSnapshot: snapshot
+    };
+
+    const rawNodes = snapshot.nodes;
     const normalizedNodes: Record<string, TypedNode> = {};
     if (Array.isArray(rawNodes)) {
       rawNodes.forEach((node) => {
@@ -56,7 +71,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       });
     }
 
-    const rawEdges = diagram.graphSnapshot.edges;
+    const rawEdges = snapshot.edges;
     const normalizedEdges: Record<string, TypedEdge> = {};
     if (Array.isArray(rawEdges)) {
       rawEdges.forEach((edge) => {
@@ -70,7 +85,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     }
 
     set({
-      currentDiagram: diagram,
+      currentDiagram: parsedDiagram,
       nodes: normalizedNodes,
       edges: normalizedEdges,
       undoStack: [],
@@ -138,9 +153,10 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     get().addHistoryEntry();
     const currentState = nodes[id].state;
     const entityClass = nodes[id].entityClass || '';
+    const isElectrical = ['BREAKER', 'SWITCH', 'RELAY', 'PB', 'PUSH_BUTTON'].some(cls => entityClass.includes(cls));
     const newState = currentState === 'open' || currentState === 'on' 
-        ? (entityClass.includes('BREAKER') || entityClass.includes('SWITCH') ? 'off' : 'closed')
-        : (entityClass.includes('BREAKER') || entityClass.includes('SWITCH') ? 'on' : 'open');
+        ? (isElectrical ? 'off' : 'closed')
+        : (isElectrical ? 'on' : 'open');
 
     const updatedNodes = {
       ...nodes,
